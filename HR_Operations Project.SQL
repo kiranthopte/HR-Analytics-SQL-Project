@@ -339,3 +339,32 @@ round(t.threshold_emp_count*100/d.total_emp_count,2) as percentage_above_min_sal
 from threshold_count t
 join dept_count d on t.department_id=d.department_id
 order by 4 asc;
+
+/*Generate complete reporting hierarchy from CEO to lowest-level employee using Recursive CTE.*/
+WITH RECURSIVE cte AS (
+    SELECT employee_id,
+           first_name,
+           manager_id,
+           department_id,
+           department_name,
+           job_title,
+           1 AS level
+    FROM hr_view
+    WHERE manager_id IS NULL
+
+    UNION ALL
+
+    SELECT h.employee_id,
+           h.first_name,
+           h.manager_id,
+           h.department_id,
+           h.department_name,
+           h.job_title,
+           c.level + 1
+    FROM hr_view h
+    JOIN cte c
+        ON h.manager_id = c.employee_id
+)
+SELECT *
+FROM cte
+ORDER BY level, manager_id, employee_id;
